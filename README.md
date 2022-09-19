@@ -32,7 +32,7 @@ const char* DataloggerName = "dataplotter";
 ...
 /*END USER CODE - GLOBAL DECLARATIONS*/
 ```
-4. Specify the total number of parameters that you want to log, as well as their names. Make sure to add a backslash `\` in front of each parameter name. (This variable will be used as the URL of the associated GET request.) For instance like this:
+4. Specify the total number of parameters that you want to log, as well as their names. Make sure to add a slash `/` in front of each parameter name. (This variable will be used as the URL of the associated GET request.) For instance like this:
 ```
 /*BEGIN USER CODE - NAMES OF PARAMETERS*/
 const int NumberOfParameters = 4;
@@ -131,4 +131,4 @@ The parameters are formed like this \<quantity\>+\<identifier\> = \<parameter\>.
 ```
 4. Upload the ```index.html```into the flash memory of the ESP32 using the "ESP32 Sketch Data Upload" button. (Note that the serial monitor has to be closed for a successful upload!)
 5. That's it! Have fun modifying!
-### Access <http://dataplotter.local> in your webbrowser (or which name you defined in the ```ESP32_DataPlotter.ino```-sketch) and admire the beauty of your data!
+### Access <http://dataplotter.local> in your webbrowser (or whichever name you defined in the ```ESP32_DataPlotter.ino```-sketch) and admire the beauty of your data!
