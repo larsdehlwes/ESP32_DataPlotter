@@ -1,0 +1,97 @@
+<!DOCTYPE HTML><html>
+<head>
+  <!-- Load plotly.js into the DOM -->
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+  <style>
+    body {
+      min-width: 310px;
+        max-width: 1200px;
+        height: 600px;
+      margin: 0 auto;
+    }
+    h2 {
+      font-family: Arial;
+      font-size: 2.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>ESP32 Dataplotter</h2>
+  <form method="GET" action="/" align="center">Choose quantity: 
+    <select id="quantity">
+<!--  We can list as many options as desired, here we display the /voltagePinA, /voltagePinB and /voltagePinC values in a single graph. See below.-->
+      <option value="/voltage">voltage</option>
+      <option value="/hallSensor">hallSensor</option>
+    </select>
+    <button type="button" onclick="reload()">Reload</button>
+  </form>
+  <div id='graph' class='container'><!-- Plotly chart will be drawn inside this DIV --></div>
+</body>
+<script>
+var selecter = document.getElementById('quantity');
+var graph = document.getElementById('graph');
+var dummy_data = [
+  {
+    x: ['2000-01-01 00:00:00'],
+    y: [0],
+    type: 'scatter'
+  }
+];
+var config = {responsive: true, displayModeBar: false}
+var layout = {
+  autosize: true,
+  yaxis: {
+    title: {
+      font: {
+        family: 'Courier New, monospace',
+        size: 18,
+        color: '#7f7f7f'
+      }
+    },
+    fixedrange: true
+  },
+  xaxis: { fixedrange: true }
+};
+Plotly.newPlot(graph, dummy_data, layout, config);
+function reload() {
+  while(graph.data.length>0)
+  {
+    Plotly.deleteTraces(graph, 0);
+  }
+  // Per physical quantity, such as voltage, there might be several curves to be plotted. We can add varies quantities.. See the example below
+  const block = { 'voltage':{'PinA': 'rgb(255,0,0)', 'PinB': 'rgb(0,0,255)', 'PinC': 'rgb(0,255,0)'}, 'hallSensor' :{'ESP32': 'rgb(255,255,0)'}};
+  const object = block[selecter.options[selecter.selectedIndex].text];
+  for (const property in object){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var Data=JSON.parse(this.responseText);
+      //console.log(this.responseText);
+      var avgx = Data.Data.map( function(row) { return new Date(row[1]).getTime() });
+      var avgy = Data.Data.map( function(row) { return parseFloat(row[2]) });
+      var stdy = Data.Data.map( function(row) { return parseFloat(row[3]) });
+      var maxy = avgy.map(function (num, idx) { return num + stdy[idx]; });
+      var miny = avgy.map(function (num, idx) { return num - stdy[idx]; });
+      var avgdata = [{ x: avgx, y: avgy, type: 'scatter', name: `${property}`, mode: 'lines', line: { color: `${object[property]}`, width: 3 } }];
+      var vardata = [{ x: avgx.concat(avgx.slice().reverse()), y: maxy.concat(miny.slice().reverse()), type: 'scatter', name: `${property}`, fill: "toself", opacity: 0.1, fillcolor: `${object[property]}`, line: {color: "transparent"}, showlegend: false }];
+      Plotly.addTraces(graph,avgdata);
+      Plotly.addTraces(graph,vardata);
+    }
+  };
+  xhttp.open("GET", selecter.options[selecter.selectedIndex].value.concat(`${property}`), false);
+  xhttp.send();
+  }
+  switch(selecter.options[selecter.selectedIndex].text) {
+// If more than one quantity is used, the axes can be adapted as desired.
+    case "voltage":
+      Plotly.relayout(graph, { 'yaxis.title.text': 'Voltage / V', 'yaxis.type': 'linear' });
+      break;
+    case "hallSensor":
+      Plotly.relayout(graph, { 'yaxis.title.text': '', 'yaxis.type': 'linear' });
+      break;
+  } 
+}
+</script>
+</html>
